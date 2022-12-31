@@ -30,5 +30,7 @@ app.directive('permiss', {
         }
     }
 })
+import { parseTime } from '@/utils/ruoyi'
+app.config.globalProperties.parseTime = parseTime
 
 app.mount('#app')

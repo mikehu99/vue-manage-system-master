@@ -1,6 +1,7 @@
 import axios, {AxiosInstance, AxiosError, AxiosResponse, AxiosRequestConfig} from 'axios';
 
 const service:AxiosInstance = axios.create({
+    baseURL: "http://localhost:8088/admin",
     timeout: 5000
 });
 
@@ -17,7 +18,7 @@ service.interceptors.request.use(
 service.interceptors.response.use(
     (response: AxiosResponse) => {
         if (response.status === 200) {
-            return response;
+            return response.data.data;
         } else {
             Promise.reject();
         }

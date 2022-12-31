@@ -8,41 +8,29 @@
 				</el-select>
 				<el-input v-model="query.name" placeholder="用户名" class="handle-input mr10"></el-input>
 				<el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
-				<el-button type="primary" :icon="Plus">新增</el-button>
+				<el-button type="primary" :icon="Plus" @click="handleCreate">新增</el-button>
 			</div>
 			<el-table :data="tableData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
 				<el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
-				<el-table-column prop="name" label="用户名"></el-table-column>
-				<el-table-column label="账户余额">
-					<template #default="scope">￥{{ scope.row.money }}</template>
-				</el-table-column>
-				<el-table-column label="头像(查看大图)" align="center">
-					<template #default="scope">
-						<el-image
-							class="table-td-thumb"
-							:src="scope.row.thumb"
-							:z-index="10"
-							:preview-src-list="[scope.row.thumb]"
-							preview-teleported
-						>
-						</el-image>
-					</template>
-				</el-table-column>
-				<el-table-column prop="address" label="地址"></el-table-column>
-				<el-table-column label="状态" align="center">
+				<el-table-column prop="typeName" label="类型名称"></el-table-column>
+				<el-table-column label="是否删除" align="center">
 					<template #default="scope">
 						<el-tag
-							:type="scope.row.state === '成功' ? 'success' : scope.row.state === '失败' ? 'danger' : ''"
+							:type="scope.row.delFlag === 1 ? 'danger' : scope.row.delFlag === 0 ? 'success' : ''"
 						>
-							{{ scope.row.state }}
+							{{ scope.row.delFlag === 1 ? '是':'否' }}
 						</el-tag>
 					</template>
 				</el-table-column>
 
-				<el-table-column prop="date" label="注册时间"></el-table-column>
+				<el-table-column prop="updateTime" label="更新时间">
+          <template #default="scope">
+            <span>{{ parseTime(scope.row.updateTime) }}</span>
+          </template>
+        </el-table-column>
 				<el-table-column label="操作" width="220" align="center">
 					<template #default="scope">
-						<el-button text :icon="Edit" @click="handleEdit(scope.$index, scope.row)" v-permiss="15">
+						<el-button text :icon="Edit" @click="handleEdit(scope.row)" v-permiss="15">
 							编辑
 						</el-button>
 						<el-button text :icon="Delete" class="red" @click="handleDelete(scope.$index)" v-permiss="16">
@@ -55,7 +43,7 @@
 				<el-pagination
 					background
 					layout="total, prev, pager, next"
-					:current-page="query.pageIndex"
+					:current-page="query.pageNo"
 					:page-size="query.pageSize"
 					:total="pageTotal"
 					@current-change="handlePageChange"
@@ -66,12 +54,15 @@
 		<!-- 编辑弹出框 -->
 		<el-dialog title="编辑" v-model="editVisible" width="30%">
 			<el-form label-width="70px">
-				<el-form-item label="用户名">
-					<el-input v-model="form.name"></el-input>
+				<el-form-item label="类型名称">
+					<el-input v-model="form.typeName"></el-input>
 				</el-form-item>
-				<el-form-item label="地址">
-					<el-input v-model="form.address"></el-input>
-				</el-form-item>
+        <el-form-item label="是否删除">
+          <el-radio-group v-model="form.delFlag">
+            <el-radio  :label="1">是</el-radio>
+            <el-radio  :label="0">否</el-radio>
+          </el-radio-group>
+        </el-form-item>
 			</el-form>
 			<template #footer>
 				<span class="dialog-footer">
@@ -87,42 +78,40 @@
 import { ref, reactive } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Delete, Edit, Search, Plus } from '@element-plus/icons-vue';
-import { fetchData } from '@/api/tms/sourceType';
+import { sourceTypeSaveEdit ,sourceTypeList } from '@/api/tms/sourceType';
 
 interface TableItem {
 	id: number;
-	name: string;
-	money: string;
-	state: string;
-	date: string;
-	address: string;
+  typeName: string;
+  delFlag: number;
+  createTime: string;
+  updateTime: string;
 }
 
 const query = reactive({
-	address: '',
-	name: '',
-	pageIndex: 1,
+  pageNo: 1,
 	pageSize: 10
 });
 const tableData = ref<TableItem[]>([]);
 const pageTotal = ref(0);
 // 获取表格数据
 const getData = () => {
-	fetchData().then(res => {
-		tableData.value = res.data.list;
-		pageTotal.value = res.data.pageTotal || 50;
+  sourceTypeList(query).then(data => {
+    console.log(data)
+		tableData.value = data.records;
+		pageTotal.value = data.total || 50;
 	});
 };
 getData();
 
 // 查询操作
 const handleSearch = () => {
-	query.pageIndex = 1;
+	query.pageNo = 1;
 	getData();
 };
 // 分页导航
 const handlePageChange = (val: number) => {
-	query.pageIndex = val;
+	query.pageNo = val;
 	getData();
 };
 
@@ -142,22 +131,32 @@ const handleDelete = (index: number) => {
 // 表格编辑时弹窗和保存
 const editVisible = ref(false);
 let form = reactive({
-	name: '',
-	address: ''
+  id: undefined,
+  typeName: '',
+  delFlag: 0
 });
 let idx: number = -1;
-const handleEdit = (index: number, row: any) => {
-	idx = index;
-	form.name = row.name;
-	form.address = row.address;
+const handleEdit = (row: any) => {
+  form.id = row.id;
+  form.typeName = row.typeName;
+	form.delFlag = row.delFlag;
 	editVisible.value = true;
+};
+//新增
+const handleCreate = () => {
+  form.id = undefined;
+  form.typeName ='';
+  form.delFlag = 0;
+  editVisible.value = true;
 };
 const saveEdit = () => {
 	editVisible.value = false;
-	ElMessage.success(`修改第 ${idx + 1} 行成功`);
-	tableData.value[idx].name = form.name;
-	tableData.value[idx].address = form.address;
+  sourceTypeSaveEdit(form).then(response => {
+    ElMessage.success("操作成功");
+    getData();
+  });
 };
+
 </script>
 
 <style scoped>
