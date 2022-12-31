@@ -106,6 +106,14 @@ const routes:RouteRecordRaw[] = [
                     permiss: '9'
                 },
                 component: () => import (/* webpackChunkName: "markdown" */ '../views/markdown.vue')
+            }, {
+                path: '/tms/sourceType',
+                name: 'sourceType',
+                meta: {
+                    title: '新闻类别',
+                    permiss: '10'
+                },
+                component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/sourceType.vue')
             }
         ]
     }, {

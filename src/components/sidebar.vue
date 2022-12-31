@@ -132,7 +132,20 @@ const items = [
 		index: '/donate',
 		title: '支持作者',
 		permiss: '14'
-	}
+	},
+  {
+    icon: 'Edit',
+    index: '15',
+    title: '译文',
+    permiss: '16',
+    subs: [
+      {
+        index: '/tms/sourceType',
+        title: '新闻类别',
+        permiss: '17'
+      }
+    ]
+  },
 ];
 
 const route = useRoute();
