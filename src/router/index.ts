@@ -114,6 +114,30 @@ const routes:RouteRecordRaw[] = [
                     permiss: '10'
                 },
                 component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/sourceType.vue')
+            },{
+                path: '/tms/source',
+                name: 'source',
+                meta: {
+                    title: '新闻源',
+                    permiss: '11'
+                },
+                component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/source.vue')
+            },{
+                path: '/tms/spiderLink',
+                name: 'spiderLink',
+                meta: {
+                    title: '可爬链接',
+                    permiss: '12'
+                },
+                component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/spiderLink.vue')
+            },{
+                path: '/tms/spiderTag',
+                name: 'spiderTag',
+                meta: {
+                    title: '可爬标签',
+                    permiss: '13'
+                },
+                component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/spiderTag.vue')
             }
         ]
     }, {

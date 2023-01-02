@@ -1,15 +1,15 @@
 import request from '@/utils/request';
-export const saveUpdate = (sourceType:{}) => {
+export const saveUpdate = (data:{}) => {
     return request({
-        url: '/sourceType/saveUpdate',
+        url: '/spiderLink/saveUpdate',
         method: 'post',
-        data:sourceType
+        data:data
     });
 };
 
 export const getList = (params:{}) => {
     return request({
-        url: '/sourceType/list',
+        url: '/spiderLink/list',
         method: 'get',
         params:params
     });

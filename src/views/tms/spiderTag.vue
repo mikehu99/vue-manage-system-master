@@ -10,9 +10,16 @@
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button type="primary" :icon="Plus" @click="handleCreate">新增</el-button>
       </div>
+
+      <!--列表-->
       <el-table :data="tableData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
         <el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
-        <el-table-column prop="typeName" label="类型名称"></el-table-column>
+        <el-table-column label="可爬链接">
+          <template #default="scope">
+            {{getLinkUrl(scope.row.linkId)}}
+          </template>
+        </el-table-column>
+        <el-table-column prop="tag" label="标签"></el-table-column>
         <el-table-column label="是否删除" align="center">
           <template #default="scope">
             <el-tag
@@ -20,12 +27,6 @@
             >
               {{ scope.row.delFlag === 1 ? '是' : '否' }}
             </el-tag>
-          </template>
-        </el-table-column>
-
-        <el-table-column prop="updateTime" label="更新时间">
-          <template #default="scope">
-            <span>{{ parseTime(scope.row.updateTime) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="220" align="center">
@@ -54,8 +55,13 @@
     <!-- 编辑弹出框 -->
     <el-dialog title="编辑" v-model="editVisible" width="30%">
       <el-form label-width="70px">
-        <el-form-item label="类型名称">
-          <el-input v-model="form.typeName"></el-input>
+        <el-form-item label="可爬链接">
+          <el-select v-model="form.linkId" placeholder="选择新闻源">
+            <el-option v-for="(link) in linkList" :label="link.url" :value="link.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="标签">
+          <el-input v-model="form.tag"></el-input>
         </el-form-item>
         <el-form-item label="是否删除">
           <el-radio-group v-model="form.delFlag">
@@ -74,44 +80,60 @@
   </div>
 </template>
 
-<script setup lang="ts" name="sourceType">
-import {ref, reactive} from 'vue';
+<script setup lang="ts" name="spiderTag">
+import {ref, reactive, toRefs} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
-import {saveUpdate, getList} from '@/api/tms/sourceType';
-
+import {saveUpdate, getList} from '@/api/tms/spiderTag';
+import { getList as getLinkList } from '@/api/tms/spiderLink';
 interface TableItem {
-  id: number;
-  typeName: string;
-  delFlag: number;
-  createTime: string;
-  updateTime: string;
 }
-
-const query = reactive({
-  pageNo: 1,
-  pageSize: 10
+const data = reactive({
+  form: {},
+  query:{
+    pageNo: 1,
+    pageSize: 10
+  }
 });
+
+const { form,query } = toRefs(data);
 const tableData = ref<TableItem[]>([]);
 const pageTotal = ref(0);
+const linkList = ref([]);
+
 // 获取表格数据
 const getData = () => {
-  getList(query).then(data => {
+  getList(query.value).then(data => {
     console.log(data)
     tableData.value = data.records;
     pageTotal.value = data.total || 50;
   });
 };
 getData();
-
+//获取可爬链接数据
+const getSpiderLinkData = () => {
+  getLinkList({
+    pageNo: 1,
+    pageSize: 100
+  }).then(data => {
+    console.log(data)
+    linkList.value = data.records;
+  });
+};
+getSpiderLinkData();
+//获取类型名称
+const getLinkUrl = (id) => {
+  let arr = linkList.value.filter((i) => {return id == i.id;})
+  return arr[0].url;
+};
 // 查询操作
 const handleSearch = () => {
-  query.pageNo = 1;
+  query.value.pageNo = 1;
   getData();
 };
 // 分页导航
 const handlePageChange = (val: number) => {
-  query.pageNo = val;
+  query.value.pageNo = val;
   getData();
 };
 
@@ -132,28 +154,27 @@ const handleDelete = (row: any) => {
 
 // 表格编辑时弹窗和保存
 const editVisible = ref(false);
-let form = reactive({
-  id: undefined,
-  typeName: '',
-  delFlag: 0
-});
-let idx: number = -1;
+/** 表单重置 */
+function reset() {
+  form.value = {
+    id: undefined,
+    linkId: undefined,
+    tag: '',
+    delFlag: 0
+  };
+}
 const handleEdit = (row: any) => {
-  form.id = row.id;
-  form.typeName = row.typeName;
-  form.delFlag = row.delFlag;
+  form.value = row;
   editVisible.value = true;
 };
 //新增
 const handleCreate = () => {
-  form.id = undefined;
-  form.typeName = '';
-  form.delFlag = 0;
+  reset();
   editVisible.value = true;
 };
 const saveEdit = () => {
   editVisible.value = false;
-  saveUpdate(form).then(response => {
+  saveUpdate(form.value).then(response => {
     ElMessage.success("操作成功");
     getData();
   });

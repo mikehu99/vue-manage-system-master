@@ -12,7 +12,18 @@
       </div>
       <el-table :data="tableData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
         <el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
-        <el-table-column prop="typeName" label="类型名称"></el-table-column>
+        <el-table-column label="新闻源">
+          <template #default="scope">
+            {{getSourceName(scope.row.sourceId)}}
+          </template>
+        </el-table-column>
+        <el-table-column prop="url" label="链接"></el-table-column>
+        <el-table-column prop="prefix" label="前缀"></el-table-column>
+        <el-table-column label="类型">
+          <template #default="scope">
+            {{getTypeName(scope.row.typeId)}}
+          </template>
+        </el-table-column>
         <el-table-column label="是否删除" align="center">
           <template #default="scope">
             <el-tag
@@ -22,7 +33,6 @@
             </el-tag>
           </template>
         </el-table-column>
-
         <el-table-column prop="updateTime" label="更新时间">
           <template #default="scope">
             <span>{{ parseTime(scope.row.updateTime) }}</span>
@@ -54,8 +64,21 @@
     <!-- 编辑弹出框 -->
     <el-dialog title="编辑" v-model="editVisible" width="30%">
       <el-form label-width="70px">
-        <el-form-item label="类型名称">
-          <el-input v-model="form.typeName"></el-input>
+        <el-form-item label="新闻源">
+          <el-select v-model="form.sourceId" placeholder="选择新闻源">
+            <el-option v-for="(source) in sourceList" :label="source.nameZh" :value="source.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="链接">
+          <el-input v-model="form.url"></el-input>
+        </el-form-item>
+        <el-form-item label="前缀">
+          <el-input v-model="form.prefix"></el-input>
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-select v-model="form.typeId" placeholder="选择类型">
+            <el-option v-for="(type) in sourceTypeList" :label="type.typeName" :value="type.id" />
+          </el-select>
         </el-form-item>
         <el-form-item label="是否删除">
           <el-radio-group v-model="form.delFlag">
@@ -74,44 +97,78 @@
   </div>
 </template>
 
-<script setup lang="ts" name="sourceType">
-import {ref, reactive} from 'vue';
+<script setup lang="ts" name="spiderLink">
+import {ref, reactive, toRefs} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
-import {saveUpdate, getList} from '@/api/tms/sourceType';
+import {saveUpdate, getList} from '@/api/tms/spiderLink';
+import { getList as getSourceList } from '@/api/tms/source';
+import {getList as getSourceTypeList} from '@/api/tms/sourceType';
 
 interface TableItem {
-  id: number;
-  typeName: string;
-  delFlag: number;
-  createTime: string;
-  updateTime: string;
 }
-
-const query = reactive({
-  pageNo: 1,
-  pageSize: 10
+const data = reactive({
+  form: {},
+  query:{
+    pageNo: 1,
+    pageSize: 10
+  }
 });
+
+const { form,query } = toRefs(data);
 const tableData = ref<TableItem[]>([]);
 const pageTotal = ref(0);
+const sourceList = ref([]);
+const sourceTypeList = ref([]);
+
 // 获取表格数据
 const getData = () => {
-  getList(query).then(data => {
+  getList(query.value).then(data => {
     console.log(data)
     tableData.value = data.records;
     pageTotal.value = data.total || 50;
   });
 };
 getData();
-
+//获取类型数据
+//获取类型数据
+const getSourceTypeData = () => {
+  getSourceTypeList({
+    pageNo: 1,
+    pageSize: 100
+  }).then(data => {
+    console.log(data)
+    sourceTypeList.value = data.records;
+  });
+};
+getSourceTypeData();
+const getSourceData = () => {
+  getSourceList({
+    pageNo: 1,
+    pageSize: 100
+  }).then(data => {
+    console.log(data)
+    sourceList.value = data.records;
+  });
+};
+getSourceData();
+//获取类型名称
+const getTypeName = (id) => {
+  let arr = sourceTypeList.value.filter((i) => {return id == i.id;})
+  return arr[0].typeName
+};
+const getSourceName = (id) => {
+  let arr = sourceList.value.filter((i) => {return id == i.id;})
+  return arr[0].nameZh
+};
 // 查询操作
 const handleSearch = () => {
-  query.pageNo = 1;
+  query.value.pageNo = 1;
   getData();
 };
 // 分页导航
 const handlePageChange = (val: number) => {
-  query.pageNo = val;
+  query.value.pageNo = val;
   getData();
 };
 
@@ -132,28 +189,29 @@ const handleDelete = (row: any) => {
 
 // 表格编辑时弹窗和保存
 const editVisible = ref(false);
-let form = reactive({
-  id: undefined,
-  typeName: '',
-  delFlag: 0
-});
-let idx: number = -1;
+/** 表单重置 */
+function reset() {
+  form.value = {
+    id: undefined,
+    sourceId: undefined,
+    url: '',
+    prefix: '',
+    typeId: undefined,
+    delFlag: 0
+  };
+}
 const handleEdit = (row: any) => {
-  form.id = row.id;
-  form.typeName = row.typeName;
-  form.delFlag = row.delFlag;
+  form.value = row;
   editVisible.value = true;
 };
 //新增
 const handleCreate = () => {
-  form.id = undefined;
-  form.typeName = '';
-  form.delFlag = 0;
+  reset();
   editVisible.value = true;
 };
 const saveEdit = () => {
   editVisible.value = false;
-  saveUpdate(form).then(response => {
+  saveUpdate(form.value).then(response => {
     ElMessage.success("操作成功");
     getData();
   });

@@ -1,15 +1,15 @@
 import request from '@/utils/request';
-export const saveUpdate = (sourceType:{}) => {
+export const saveUpdate = (source:{}) => {
     return request({
-        url: '/sourceType/saveUpdate',
+        url: '/source/saveUpdate',
         method: 'post',
-        data:sourceType
+        data:source
     });
 };
 
 export const getList = (params:{}) => {
     return request({
-        url: '/sourceType/list',
+        url: '/source/list',
         method: 'get',
         params:params
     });

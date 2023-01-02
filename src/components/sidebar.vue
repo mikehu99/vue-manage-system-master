@@ -143,6 +143,21 @@ const items = [
         index: '/tms/sourceType',
         title: '新闻类别',
         permiss: '17'
+      },
+      {
+        index: '/tms/source',
+        title: '新闻源',
+        permiss: '18'
+      },
+      {
+        index: '/tms/spiderLink',
+        title: '可爬链接',
+        permiss: '19'
+      },
+      {
+        index: '/tms/spiderTag',
+        title: '可爬标签',
+        permiss: '20'
       }
     ]
   },
