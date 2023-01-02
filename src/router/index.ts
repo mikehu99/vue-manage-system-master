@@ -146,6 +146,14 @@ const routes:RouteRecordRaw[] = [
                     permiss: '14'
                 },
                 component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/mapping.vue')
+            },{
+                path: '/tms/spiderUrl',
+                name: 'spiderUrl',
+                meta: {
+                    title: '映射',
+                    permiss: '15'
+                },
+                component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/spiderUrl.vue')
             }
         ]
     }, {

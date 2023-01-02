@@ -163,6 +163,11 @@ const items = [
         index: '/tms/mapping',
         title: '映射',
         permiss: '21'
+      },
+      {
+        index: '/tms/spiderUrl',
+        title: '爬取链接',
+        permiss: '22'
       }
     ]
   },
