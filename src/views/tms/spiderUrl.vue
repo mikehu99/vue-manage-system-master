@@ -24,11 +24,9 @@
             {{getSpiderTagName(scope.row.tagId)}}
           </template>
         </el-table-column>
-        <el-table-column prop="url" label="标签"></el-table-column>
-        <el-table-column prop="title" label="标签"></el-table-column>
-        <el-table-column prop="titleZh" label="标签"></el-table-column>
-        <el-table-column prop="url" label="标签"></el-table-column>
-        <el-table-column prop="url" label="标签"></el-table-column>
+        <el-table-column prop="url" label="链接"></el-table-column>
+        <el-table-column prop="title" label="标题"></el-table-column>
+        <el-table-column prop="titleZh" label="中文标题"></el-table-column>
         <el-table-column label="生成译文" align="center">
           <template #default="scope">
             <el-tag

@@ -9,10 +9,12 @@
         <el-input v-model="query.name" placeholder="用户名" class="handle-input mr10"></el-input>
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button type="primary" :icon="Plus" @click="handleCreate">新增</el-button>
+        <el-button type="primary" icon="Delete" :disabled="multiple" @click="spiderUrlByTags">生成译文</el-button>
       </div>
 
       <!--列表-->
-      <el-table :data="tableData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+      <el-table :data="tableData" @selection-change="handleSelectionChange" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+        <el-table-column type="selection" width="55" align="center" />
         <el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
         <el-table-column label="可爬链接">
           <template #default="scope">
@@ -86,8 +88,11 @@ import {ElMessage, ElMessageBox} from 'element-plus';
 import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
 import {saveUpdate, getList} from '@/api/tms/spiderTag';
 import { getList as getLinkList } from '@/api/tms/spiderLink';
-interface TableItem {
-}
+import { spiderByTag } from '@/api/tms/spiderUrl';
+
+const ids = ref([]);
+const single = ref(true);
+const multiple = ref(true);
 const data = reactive({
   form: {},
   query:{
@@ -95,9 +100,8 @@ const data = reactive({
     pageSize: 10
   }
 });
-
 const { form,query } = toRefs(data);
-const tableData = ref<TableItem[]>([]);
+const tableData = ref([]);
 const pageTotal = ref(0);
 const linkList = ref([]);
 
@@ -179,7 +183,24 @@ const saveEdit = () => {
     getData();
   });
 };
-
+const spiderUrlByTags  = () => {
+  // 二次确认删除
+  ElMessageBox.confirm('确定要通过标签'+ids.value.join(',')+'生成链接吗？', '提示', {
+    type: 'warning'
+  }).then(() => {
+    spiderByTag(ids.value.join(',')).then(response => {
+      ElMessage.success("操作成功");
+      getData();
+    });
+  }).catch(() => {
+  });
+};
+/** 多选框选中数据 */
+function handleSelectionChange(selection) {
+  ids.value = selection.map(item => item.id);
+  single.value = selection.length != 1;
+  multiple.value = !selection.length;
+}
 </script>
 
 <style scoped>

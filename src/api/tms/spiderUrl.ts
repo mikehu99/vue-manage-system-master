@@ -14,3 +14,9 @@ export const getList = (params:{}) => {
         params:params
     });
 };
+export const spiderByTag = (ids:String) => {
+    return request({
+        url: '/spiderUrl/addByTag/'+ids,
+        method: 'get'
+    });
+};
