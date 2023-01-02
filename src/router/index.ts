@@ -126,7 +126,7 @@ const routes:RouteRecordRaw[] = [
                 path: '/tms/spiderLink',
                 name: 'spiderLink',
                 meta: {
-                    title: '可爬链接',
+                    title: '链接源',
                     permiss: '12'
                 },
                 component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/spiderLink.vue')
@@ -134,7 +134,7 @@ const routes:RouteRecordRaw[] = [
                 path: '/tms/spiderTag',
                 name: 'spiderTag',
                 meta: {
-                    title: '可爬标签',
+                    title: '标签源',
                     permiss: '13'
                 },
                 component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/spiderTag.vue')
@@ -150,7 +150,7 @@ const routes:RouteRecordRaw[] = [
                 path: '/tms/spiderUrl',
                 name: 'spiderUrl',
                 meta: {
-                    title: '映射',
+                    title: '爬取链接',
                     permiss: '15'
                 },
                 component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/spiderUrl.vue')

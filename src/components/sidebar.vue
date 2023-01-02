@@ -151,12 +151,12 @@ const items = [
       },
       {
         index: '/tms/spiderLink',
-        title: '可爬链接',
+        title: '链接源',
         permiss: '19'
       },
       {
         index: '/tms/spiderTag',
-        title: '可爬标签',
+        title: '标签源',
         permiss: '20'
       },
       {

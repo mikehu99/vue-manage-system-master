@@ -13,18 +13,17 @@
 
       <!--列表-->
       <el-table :data="tableData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
-        <el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
         <el-table-column label="新闻源">
           <template #default="scope">
             {{getSourceName(scope.row.sourceId)}}
           </template>
         </el-table-column>
-        <el-table-column label="标签源">
+        <el-table-column prop="url" label="链接"></el-table-column>
+        <el-table-column label="类别">
           <template #default="scope">
-            {{getSpiderTagName(scope.row.tagId)}}
+            {{getTypeName(scope.row.typeId)}}
           </template>
         </el-table-column>
-        <el-table-column prop="url" label="链接"></el-table-column>
         <el-table-column prop="title" label="标题"></el-table-column>
         <el-table-column prop="titleZh" label="中文标题"></el-table-column>
         <el-table-column label="生成译文" align="center">
@@ -71,12 +70,12 @@
     <!-- 编辑弹出框 -->
     <el-dialog title="编辑" v-model="editVisible" width="30%">
       <el-form label-width="70px">
-        <el-form-item label="可爬链接">
+        <el-form-item label="连接源">
           <el-select v-model="form.linkId" placeholder="选择新闻源">
             <el-option v-for="(link) in linkList" :label="link.url" :value="link.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="标签">
+        <el-form-item label="标签源">
           <el-input v-model="form.tag"></el-input>
         </el-form-item>
         <el-form-item label="是否删除">
@@ -103,6 +102,7 @@ import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
 import {saveUpdate, getList} from '@/api/tms/spiderUrl';
 import { getList as getSourceList } from '@/api/tms/source';
 import { getList as getSpiderTagList } from '@/api/tms/spiderTag';
+import {getList as getSourceTypeList} from '@/api/tms/sourceType';
 
 
 interface TableItem {
@@ -120,6 +120,7 @@ const tableData = ref<TableItem[]>([]);
 const pageTotal = ref(0);
 const sourceList = ref([]);
 const spiderTagList = ref([]);
+const sourceTypeList = ref([]);
 
 // 获取表格数据
 const getData = () => {
@@ -152,6 +153,17 @@ const getSpiderTagData = () => {
   });
 };
 getSpiderTagData();
+//获取类型数据
+const getSourceTypeData = () => {
+  getSourceTypeList({
+    pageNo: 1,
+    pageSize: 100
+  }).then(data => {
+    console.log(data)
+    sourceTypeList.value = data.records;
+  });
+};
+getSourceTypeData();
 //获取类型名称
 const getSourceName = (id) => {
   let arr = sourceList.value.filter((i) => {return id == i.id;})
@@ -161,6 +173,11 @@ const getSourceName = (id) => {
 const getSpiderTagName = (id) => {
   let arr = spiderTagList.value.filter((i) => {return id == i.id;})
   return arr[0].tag;
+};
+//获取类型名称
+const getTypeName = (id) => {
+  let arr = sourceTypeList.value.filter((i) => {return id == i.id;})
+  return arr[0].typeName
 };
 // 查询操作
 const handleSearch = () => {

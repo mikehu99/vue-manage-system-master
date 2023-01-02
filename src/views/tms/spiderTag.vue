@@ -62,7 +62,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="链接源">
-          <el-select v-model="form.linkId" placeholder="选择新闻源">
+          <el-select v-model="form.linkId" placeholder="选择链接源">
             <el-option v-for="(link) in linkList" :label="link.url" :value="link.id" />
           </el-select>
         </el-form-item>
