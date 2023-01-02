@@ -45,10 +45,10 @@
         </el-table-column>
         <el-table-column label="操作" width="220" align="center">
           <template #default="scope">
-            <el-button text :icon="Edit" @click="handleEdit(scope.row)" v-permiss="15">
+            <el-button text :icon="Edit" @click="handleEdit(scope.row)" >
               编辑
             </el-button>
-            <el-button text :icon="Delete" class="red" @click="handleDelete(scope.row)" v-permiss="16">
+            <el-button text :icon="Delete" class="red" @click="handleDelete(scope.row)">
               删除
             </el-button>
           </template>
@@ -100,6 +100,9 @@
         </el-form-item>
         <el-form-item label="图片链接">
           <el-input v-model="form.imgUrl"></el-input>
+        </el-form-item>
+        <el-form-item label="图片说明">
+          <el-input v-model="form.imgCaption"></el-input>
         </el-form-item>
         <el-form-item label="是否删除">
           <el-radio-group v-model="form.delFlag">

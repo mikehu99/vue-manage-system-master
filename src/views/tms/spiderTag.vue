@@ -16,11 +16,10 @@
       <el-table :data="tableData" @selection-change="handleSelectionChange" border class="table" ref="multipleTable" header-cell-class-name="table-header">
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
-        <el-table-column label="可爬链接">
-          <template #default="scope">
-            {{getLinkUrl(scope.row.linkId)}}
-          </template>
-        </el-table-column>
+        <el-table-column prop="sourceNameEn" label="新闻源"></el-table-column>
+        <el-table-column prop="linkUrl" label="链接源"></el-table-column>
+        <el-table-column prop="mappingId" label="映射"></el-table-column>
+        <el-table-column prop="typeName" label="类型"></el-table-column>
         <el-table-column prop="tag" label="标签"></el-table-column>
         <el-table-column label="是否删除" align="center">
           <template #default="scope">
@@ -57,9 +56,24 @@
     <!-- 编辑弹出框 -->
     <el-dialog title="编辑" v-model="editVisible" width="30%">
       <el-form label-width="70px">
-        <el-form-item label="可爬链接">
+        <el-form-item label="新闻源">
+          <el-select v-model="form.sourceId" placeholder="选择新闻源">
+            <el-option v-for="(source) in sourceList" :label="source.nameEn" :value="source.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="链接源">
           <el-select v-model="form.linkId" placeholder="选择新闻源">
             <el-option v-for="(link) in linkList" :label="link.url" :value="link.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="映射">
+          <el-select v-model="form.mappingId" placeholder="映射">
+            <el-option v-for="(mapping) in mappingList" :label="mapping.id" :value="mapping.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-select v-model="form.typeId" placeholder="类型">
+            <el-option v-for="(type) in sourceTypeList" :label="type.typeName" :value="type.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="标签">
@@ -83,27 +97,53 @@
 </template>
 
 <script setup lang="ts" name="spiderTag">
-import {ref, reactive, toRefs} from 'vue';
+import {ref, reactive, toRefs, watch} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
 import {saveUpdate, getList} from '@/api/tms/spiderTag';
 import { getList as getLinkList } from '@/api/tms/spiderLink';
+import { getList as getMappingList } from '@/api/tms/mapping';
 import { spiderByTag } from '@/api/tms/spiderUrl';
+import { getList as getSourceList } from '@/api/tms/source';
+import {getList as getSourceTypeList} from '@/api/tms/sourceType';
 
 const ids = ref([]);
 const single = ref(true);
 const multiple = ref(true);
 const data = reactive({
-  form: {},
+  form: {
+    id: undefined,
+    sourceId: undefined,
+    linkId: undefined,
+    mappingId: undefined,
+    typeId: undefined,
+    tag: '',
+    delFlag: 0
+  },
   query:{
     pageNo: 1,
     pageSize: 10
-  }
+  },
+  mappingQuery:{
+    pageNo: 1,
+    pageSize: 100,
+    sourceId:undefined,
+  },
+  linkQuery:{
+    pageNo: 1,
+    pageSize: 100,
+    sourceId:undefined,
+  },
 });
-const { form,query } = toRefs(data);
+const { form,query,mappingQuery,linkQuery } = toRefs(data);
 const tableData = ref([]);
 const pageTotal = ref(0);
 const linkList = ref([]);
+const mappingList = ref([]);
+const sourceList = ref([]);
+const sourceTypeList = ref([]);
+watch(() => form.value.sourceId, value => refreshMappingList(value))
+watch(() => form.value.sourceId, value => refreshlinkList(value))
 
 // 获取表格数据
 const getData = () => {
@@ -114,17 +154,53 @@ const getData = () => {
   });
 };
 getData();
-//获取可爬链接数据
-const getSpiderLinkData = () => {
-  getLinkList({
+
+//获取类型数据
+const getSourceTypeData = () => {
+  getSourceTypeList({
     pageNo: 1,
     pageSize: 100
   }).then(data => {
     console.log(data)
+    sourceTypeList.value = data.records;
+  });
+};
+getSourceTypeData();
+const getSourceData = () => {
+  getSourceList({
+    pageNo: 1,
+    pageSize: 100
+  }).then(data => {
+    console.log(data)
+    sourceList.value = data.records;
+  });
+};
+getSourceData();
+//获取类型名称
+const getTypeName = (id) => {
+  let arr = sourceTypeList.value.filter((i) => {return id == i.id;})
+  return arr[0].typeName
+};
+const getSourceName = (id) => {
+  let arr = sourceList.value.filter((i) => {return id == i.id;})
+  return arr[0].nameZh
+};
+//获取映射数据
+const refreshMappingList = (value) => {
+  mappingQuery.value.sourceId = value;
+  getMappingList(mappingQuery.value).then(data => {
+    console.log(data)
+    mappingList.value = data.records;
+  });
+};
+//获取可爬链接数据
+const refreshlinkList = (value) => {
+  linkQuery.value.sourceId = value;
+  getLinkList(linkQuery.value).then(data => {
+    console.log(data)
     linkList.value = data.records;
   });
 };
-getSpiderLinkData();
 //获取类型名称
 const getLinkUrl = (id) => {
   let arr = linkList.value.filter((i) => {return id == i.id;})
@@ -162,7 +238,10 @@ const editVisible = ref(false);
 function reset() {
   form.value = {
     id: undefined,
+    sourceId: undefined,
     linkId: undefined,
+    mappingId: undefined,
+    typeId: undefined,
     tag: '',
     delFlag: 0
   };
