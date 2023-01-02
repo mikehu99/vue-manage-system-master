@@ -138,6 +138,14 @@ const routes:RouteRecordRaw[] = [
                     permiss: '13'
                 },
                 component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/spiderTag.vue')
+            },{
+                path: '/tms/mapping',
+                name: 'mapping',
+                meta: {
+                    title: '映射',
+                    permiss: '14'
+                },
+                component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/mapping.vue')
             }
         ]
     }, {

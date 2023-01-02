@@ -158,6 +158,11 @@ const items = [
         index: '/tms/spiderTag',
         title: '可爬标签',
         permiss: '20'
+      },
+      {
+        index: '/tms/mapping',
+        title: '映射',
+        permiss: '21'
       }
     ]
   },
