@@ -154,6 +154,14 @@ const routes:RouteRecordRaw[] = [
                     permiss: '15'
                 },
                 component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/spiderUrl.vue')
+            },{
+                path: '/tms/essay',
+                name: 'essay',
+                meta: {
+                    title: '译文',
+                    permiss: '15'
+                },
+                component: () => import (/* webpackChunkName: "markdown" */ '../views/tms/essay.vue')
             }
         ]
     }, {

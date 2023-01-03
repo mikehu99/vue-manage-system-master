@@ -169,6 +169,12 @@ const items = [
         title: '爬取链接',
         permiss: '22'
       }
+      ,
+      {
+        index: '/tms/essay',
+        title: '译文',
+        permiss: '23'
+      }
     ]
   },
 ];

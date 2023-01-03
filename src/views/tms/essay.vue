@@ -9,18 +9,23 @@
         <el-input v-model="query.name" placeholder="用户名" class="handle-input mr10"></el-input>
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button type="primary" :icon="Plus" @click="handleCreate">新增</el-button>
-        <el-button type="primary" icon="Delete" :disabled="multiple" @click="spiderUrlByTags">爬取链接</el-button>
       </div>
 
       <!--列表-->
-      <el-table :data="tableData" @selection-change="handleSelectionChange" border class="table" ref="multipleTable" header-cell-class-name="table-header">
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
-        <el-table-column prop="sourceNameEn" label="新闻源"></el-table-column>
-        <el-table-column prop="linkUrl" label="链接源"></el-table-column>
-        <el-table-column prop="mappingId" label="映射"></el-table-column>
-        <el-table-column prop="typeName" label="类型"></el-table-column>
-        <el-table-column prop="tag" label="标签"></el-table-column>
+      <el-table :data="tableData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+        <el-table-column label="新闻源">
+          <template #default="scope">
+            {{getSourceName(scope.row.sourceId)}}
+          </template>
+        </el-table-column>
+        <el-table-column prop="essayUrl" label="链接"></el-table-column>
+        <el-table-column prop="titleZh" label="标题"></el-table-column>
+        <el-table-column prop="titleEn" label="标题(英)"></el-table-column>
+        <el-table-column label="类别">
+          <template #default="scope">
+            {{getTypeName(scope.row.typeId)}}
+          </template>
+        </el-table-column>
         <el-table-column label="是否删除" align="center">
           <template #default="scope">
             <el-tag
@@ -28,6 +33,11 @@
             >
               {{ scope.row.delFlag === 1 ? '是' : '否' }}
             </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="updateTime" label="更新时间">
+          <template #default="scope">
+            <span>{{ parseTime(scope.row.updateTime) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="220" align="center">
@@ -56,27 +66,12 @@
     <!-- 编辑弹出框 -->
     <el-dialog title="编辑" v-model="editVisible" width="30%">
       <el-form label-width="70px">
-        <el-form-item label="新闻源">
-          <el-select v-model="form.sourceId" placeholder="选择新闻源">
-            <el-option v-for="(source) in sourceList" :label="source.nameEn" :value="source.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="链接源">
-          <el-select v-model="form.linkId" placeholder="选择链接源">
+        <el-form-item label="连接源">
+          <el-select v-model="form.linkId" placeholder="选择新闻源">
             <el-option v-for="(link) in linkList" :label="link.url" :value="link.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="映射">
-          <el-select v-model="form.mappingId" placeholder="映射">
-            <el-option v-for="(mapping) in mappingList" :label="mapping.id" :value="mapping.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="类型">
-          <el-select v-model="form.typeId" placeholder="类型">
-            <el-option v-for="(type) in sourceTypeList" :label="type.typeName" :value="type.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="标签">
+        <el-form-item label="标签源">
           <el-input v-model="form.tag"></el-input>
         </el-form-item>
         <el-form-item label="是否删除">
@@ -96,54 +91,32 @@
   </div>
 </template>
 
-<script setup lang="ts" name="spiderTag">
-import {ref, reactive, toRefs, watch} from 'vue';
+<script setup lang="ts" name="essay">
+import {ref, reactive, toRefs} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
-import {saveUpdate, getList} from '@/api/tms/spiderTag';
-import { getList as getLinkList } from '@/api/tms/spiderLink';
-import { getList as getMappingList } from '@/api/tms/mapping';
-import { spiderByTag } from '@/api/tms/spiderUrl';
+import {saveUpdate, getList} from '@/api/tms/essay';
 import { getList as getSourceList } from '@/api/tms/source';
+import { getList as getSpiderTagList } from '@/api/tms/spiderTag';
 import {getList as getSourceTypeList} from '@/api/tms/sourceType';
 
-const ids = ref([]);
-const single = ref(true);
-const multiple = ref(true);
+
+interface TableItem {
+}
 const data = reactive({
-  form: {
-    id: undefined,
-    sourceId: undefined,
-    linkId: undefined,
-    mappingId: undefined,
-    typeId: undefined,
-    tag: '',
-    delFlag: 0
-  },
+  form: {},
   query:{
     pageNo: 1,
     pageSize: 10
-  },
-  mappingQuery:{
-    pageNo: 1,
-    pageSize: 100,
-    sourceId:undefined,
-  },
-  linkQuery:{
-    pageNo: 1,
-    pageSize: 100,
-    sourceId:undefined,
-  },
+  }
 });
-const { form,query,mappingQuery,linkQuery } = toRefs(data);
-const tableData = ref([]);
+
+const { form,query } = toRefs(data);
+const tableData = ref<TableItem[]>([]);
 const pageTotal = ref(0);
-const linkList = ref([]);
-const mappingList = ref([]);
 const sourceList = ref([]);
+const spiderTagList = ref([]);
 const sourceTypeList = ref([]);
-watch(() => form.value.sourceId, value => refreshMappingList(value))
-watch(() => form.value.sourceId, value => refreshlinkList(value))
 
 // 获取表格数据
 const getData = () => {
@@ -154,7 +127,28 @@ const getData = () => {
   });
 };
 getData();
-
+//获取可爬链接数据
+const getSourceData = () => {
+  getSourceList({
+    pageNo: 1,
+    pageSize: 100
+  }).then(data => {
+    console.log(data)
+    sourceList.value = data.records;
+  });
+};
+getSourceData();
+//获取可爬标签数据
+const getSpiderTagData = () => {
+  getSpiderTagList({
+    pageNo: 1,
+    pageSize: 100
+  }).then(data => {
+    console.log(data)
+    spiderTagList.value = data.records;
+  });
+};
+getSpiderTagData();
 //获取类型数据
 const getSourceTypeData = () => {
   getSourceTypeList({
@@ -166,45 +160,20 @@ const getSourceTypeData = () => {
   });
 };
 getSourceTypeData();
-const getSourceData = () => {
-  getSourceList({
-    pageNo: 1,
-    pageSize: 100
-  }).then(data => {
-    console.log(data)
-    sourceList.value = data.records;
-  });
+//获取类型名称
+const getSourceName = (id) => {
+  let arr = sourceList.value.filter((i) => {return id == i.id;})
+  return arr[0].nameEn;
 };
-getSourceData();
+//获取标签名称
+const getSpiderTagName = (id) => {
+  let arr = spiderTagList.value.filter((i) => {return id == i.id;})
+  return arr[0].tag;
+};
 //获取类型名称
 const getTypeName = (id) => {
   let arr = sourceTypeList.value.filter((i) => {return id == i.id;})
   return arr[0].typeName
-};
-const getSourceName = (id) => {
-  let arr = sourceList.value.filter((i) => {return id == i.id;})
-  return arr[0].nameZh
-};
-//获取映射数据
-const refreshMappingList = (value) => {
-  mappingQuery.value.sourceId = value;
-  getMappingList(mappingQuery.value).then(data => {
-    console.log(data)
-    mappingList.value = data.records;
-  });
-};
-//获取可爬链接数据
-const refreshlinkList = (value) => {
-  linkQuery.value.sourceId = value;
-  getLinkList(linkQuery.value).then(data => {
-    console.log(data)
-    linkList.value = data.records;
-  });
-};
-//获取类型名称
-const getLinkUrl = (id) => {
-  let arr = linkList.value.filter((i) => {return id == i.id;})
-  return arr[0].url;
 };
 // 查询操作
 const handleSearch = () => {
@@ -237,12 +206,19 @@ const editVisible = ref(false);
 /** 表单重置 */
 function reset() {
   form.value = {
-    id: undefined,
+    id: '',
     sourceId: undefined,
-    linkId: undefined,
-    mappingId: undefined,
+    essayUrl: '',
+    titleZh: '',
+    titleEn: '',
+    tags: '',
+    publishTime: '',
+    headImg: '',
+    imgs: '',
+    introduceZh: '',
+    introduceEn: '',
     typeId: undefined,
-    tag: '',
+    spiderFlag: 0,
     delFlag: 0
   };
 }
@@ -262,23 +238,7 @@ const saveEdit = () => {
     getData();
   });
 };
-const spiderUrlByTags  = () => {
-  // 二次确认删除
-  ElMessageBox.confirm('确定要通过标签'+ids.value.join(',')+'生成链接吗？', '提示', {
-    type: 'warning'
-  }).then(() => {
-    spiderByTag(ids.value.join(',')).then(response => {
-      ElMessage.success("操作成功");
-    });
-  }).catch(() => {
-  });
-};
-/** 多选框选中数据 */
-function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.id);
-  single.value = selection.length != 1;
-  multiple.value = !selection.length;
-}
+
 </script>
 
 <style scoped>

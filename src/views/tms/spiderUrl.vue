@@ -9,10 +9,12 @@
         <el-input v-model="query.name" placeholder="用户名" class="handle-input mr10"></el-input>
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button type="primary" :icon="Plus" @click="handleCreate">新增</el-button>
+        <el-button type="primary" icon="Delete" :disabled="multiple" @click="spiderEssayByUrl">爬取译文</el-button>
       </div>
 
       <!--列表-->
-      <el-table :data="tableData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+      <el-table :data="tableData" @selection-change="handleSelectionChange" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+        <el-table-column type="selection" width="55" align="center" />
         <el-table-column label="新闻源">
           <template #default="scope">
             {{getSourceName(scope.row.sourceId)}}
@@ -99,10 +101,11 @@
 import {ref, reactive, toRefs} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
-import {saveUpdate, getList} from '@/api/tms/spiderUrl';
+import {saveUpdate, getList, spiderByTag} from '@/api/tms/spiderUrl';
 import { getList as getSourceList } from '@/api/tms/source';
 import { getList as getSpiderTagList } from '@/api/tms/spiderTag';
 import {getList as getSourceTypeList} from '@/api/tms/sourceType';
+import { spiderByUrl } from '@/api/tms/essay';
 
 
 interface TableItem {
@@ -121,7 +124,9 @@ const pageTotal = ref(0);
 const sourceList = ref([]);
 const spiderTagList = ref([]);
 const sourceTypeList = ref([]);
-
+const ids = ref([]);
+const single = ref(true);
+const multiple = ref(true);
 // 获取表格数据
 const getData = () => {
   getList(query.value).then(data => {
@@ -237,7 +242,24 @@ const saveEdit = () => {
     getData();
   });
 };
-
+/** 多选框选中数据 */
+function handleSelectionChange(selection) {
+  ids.value = selection.map(item => item.id);
+  single.value = selection.length != 1;
+  multiple.value = !selection.length;
+}
+const spiderEssayByUrl  = () => {
+  // 二次确认删除
+  ElMessageBox.confirm('确定要生成'+ids.value.length+'条译文吗？', '提示', {
+    type: 'warning'
+  }).then(() => {
+    spiderByUrl(ids.value.join(',')).then(response => {
+      ElMessage.success(response.data);
+      getData();
+    });
+  }).catch(() => {
+  });
+};
 </script>
 
 <style scoped>
