@@ -45,6 +45,9 @@
             <el-button text :icon="Edit" @click="handleEdit(scope.row)" v-permiss="15">
               编辑
             </el-button>
+            <el-button text :icon="Edit" @click="handleSectionEdit(scope.row.id)" v-permiss="15">
+              段落
+            </el-button>
             <el-button text :icon="Delete" class="red" @click="handleDelete(scope.row)" v-permiss="16">
               删除
             </el-button>
@@ -66,13 +69,42 @@
     <!-- 编辑弹出框 -->
     <el-dialog title="编辑" v-model="editVisible" width="30%">
       <el-form label-width="70px">
-        <el-form-item label="连接源">
-          <el-select v-model="form.linkId" placeholder="选择新闻源">
-            <el-option v-for="(link) in linkList" :label="link.url" :value="link.id" />
+        <el-form-item label="新闻源">
+          <el-select v-model="form.sourceId" placeholder="选择新闻源">
+            <el-option v-for="(source) in sourceList" :label="source.nameEn" :value="source.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="标签源">
-          <el-input v-model="form.tag"></el-input>
+        <el-form-item label="链接">
+          <el-input v-model="form.essayUrl"></el-input>
+        </el-form-item>
+        <el-form-item label="标题(中)">
+          <el-input v-model="form.titleZh"></el-input>
+        </el-form-item>
+        <el-form-item label="标题(英)">
+          <el-input v-model="form.titleEn"></el-input>
+        </el-form-item>
+        <el-form-item label="标签">
+          <el-input v-model="form.tags"></el-input>
+        </el-form-item>
+        <el-form-item label="发布时间">
+          <el-input v-model="form.publishTime"></el-input>
+        </el-form-item>
+        <el-form-item label="头图">
+          <el-input v-model="form.headImg"></el-input>
+        </el-form-item>
+        <el-form-item label="图片">
+          <el-input v-model="form.imgs"></el-input>
+        </el-form-item>
+        <el-form-item label="简介(中)">
+          <el-input v-model="form.introduceZh"></el-input>
+        </el-form-item>
+        <el-form-item label="简介(英)">
+          <el-input v-model="form.introduceEn"></el-input>
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-select v-model="form.typeId" placeholder="类型">
+            <el-option v-for="(type) in sourceTypeList" :label="type.typeName" :value="type.id" />
+          </el-select>
         </el-form-item>
         <el-form-item label="是否删除">
           <el-radio-group v-model="form.delFlag">
@@ -80,6 +112,49 @@
             <el-radio :label="0">否</el-radio>
           </el-radio-group>
         </el-form-item>
+      </el-form>
+      <template #footer>
+				<span class="dialog-footer">
+					<el-button @click="editVisible = false">取 消</el-button>
+					<el-button type="primary" @click="saveEdit">确 定</el-button>
+				</span>
+      </template>
+    </el-dialog>
+
+
+    <!-- 编辑弹出框 -->
+    <el-dialog title="段落" v-model="sectionEditVisible" width="30%">
+      <el-form label-width="70px">
+        <template v-for="(section) in sectionList">
+          <el-form-item label="序号">
+            <el-input v-model="section.sectionOrder"></el-input>
+          </el-form-item>
+          <el-form-item label="类型">
+            <el-select v-model="section.sectionType" placeholder="类型">
+              <el-option label="文字" :value="1" />
+              <el-option label="图片" :value="2" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="内容">
+            <el-input v-model="section.content"></el-input>
+          </el-form-item>
+          <el-form-item label="图片说明" v-if="section.sectionType === 2">
+            <el-input v-model="section.picCaption"></el-input>
+          </el-form-item>
+          <el-form-item label="内容(译)">
+            <el-input v-model="section.transContent"></el-input>
+          </el-form-item>
+          <el-form-item label="加强" v-if="section.sectionType === 1">
+            <el-radio-group v-model="section.isStrong">
+              <el-radio :label="1">是</el-radio>
+              <el-radio :label="0">否</el-radio>
+            </el-radio-group>
+          </el-form-item>
+				  <span class="dialog-footer">
+					<el-button type="primary" @click="updateSection(section)">更新</el-button>
+				  </span>
+          <el-divider></el-divider>
+        </template>
       </el-form>
       <template #footer>
 				<span class="dialog-footer">
@@ -99,6 +174,7 @@ import {saveUpdate, getList} from '@/api/tms/essay';
 import { getList as getSourceList } from '@/api/tms/source';
 import { getList as getSpiderTagList } from '@/api/tms/spiderTag';
 import {getList as getSourceTypeList} from '@/api/tms/sourceType';
+import {getList as getSectionList,saveUpdate as saveUpdateSection} from '@/api/tms/essaySection';
 
 
 interface TableItem {
@@ -108,15 +184,21 @@ const data = reactive({
   query:{
     pageNo: 1,
     pageSize: 10
+  },
+  sectionQuery:{
+    pageNo: 1,
+    pageSize: 100,
+    essayId:''
   }
 });
 
-const { form,query } = toRefs(data);
+const { form,query,sectionQuery } = toRefs(data);
 const tableData = ref<TableItem[]>([]);
 const pageTotal = ref(0);
 const sourceList = ref([]);
 const spiderTagList = ref([]);
 const sourceTypeList = ref([]);
+const sectionList = ref([]);
 
 // 获取表格数据
 const getData = () => {
@@ -238,7 +320,19 @@ const saveEdit = () => {
     getData();
   });
 };
-
+const sectionEditVisible = ref(false);
+const handleSectionEdit = (id: string) => {
+  sectionQuery.value.essayId = id;
+  getSectionList(sectionQuery.value).then(data => {
+    sectionList.value = data.records;
+  })
+  sectionEditVisible.value = true;
+};
+const updateSection = (section:{})=>{
+  saveUpdateSection(section).then(data => {
+    ElMessage.success("操作成功");
+  })
+};
 </script>
 
 <style scoped>

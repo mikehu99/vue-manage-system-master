@@ -2,7 +2,7 @@ import axios, {AxiosInstance, AxiosError, AxiosResponse, AxiosRequestConfig} fro
 
 const service:AxiosInstance = axios.create({
     baseURL: "http://localhost:8082/admin",
-    timeout: 5000
+    timeout: 50000
 });
 
 service.interceptors.request.use(

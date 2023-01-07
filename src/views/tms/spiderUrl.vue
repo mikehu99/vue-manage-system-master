@@ -99,7 +99,7 @@
 
 <script setup lang="ts" name="spiderUrl">
 import {ref, reactive, toRefs} from 'vue';
-import {ElMessage, ElMessageBox} from 'element-plus';
+import {ElMessage, ElMessageBox,ElLoading} from 'element-plus';
 import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
 import {saveUpdate, getList, spiderByTag} from '@/api/tms/spiderUrl';
 import { getList as getSourceList } from '@/api/tms/source';
@@ -253,8 +253,17 @@ const spiderEssayByUrl  = () => {
   ElMessageBox.confirm('确定要生成'+ids.value.length+'条译文吗？', '提示', {
     type: 'warning'
   }).then(() => {
+    const loading = ElLoading.service({
+      lock: true,
+      text: 'Loading',
+      background: 'rgba(0, 0, 0, 0.7)',
+    })
+    setTimeout(() => {
+      loading.close()
+    }, 60000)
     spiderByUrl(ids.value.join(',')).then(response => {
-      ElMessage.success(response.data);
+      loading.close()
+      ElMessage.success(response);
       getData();
     });
   }).catch(() => {
