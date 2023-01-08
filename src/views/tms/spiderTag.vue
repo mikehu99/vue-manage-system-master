@@ -98,7 +98,7 @@
 
 <script setup lang="ts" name="spiderTag">
 import {ref, reactive, toRefs, watch} from 'vue';
-import {ElMessage, ElMessageBox} from 'element-plus';
+import {ElLoading, ElMessage, ElMessageBox} from 'element-plus';
 import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
 import {saveUpdate, getList} from '@/api/tms/spiderTag';
 import { getList as getLinkList } from '@/api/tms/spiderLink';
@@ -267,8 +267,17 @@ const spiderUrlByTags  = () => {
   ElMessageBox.confirm('确定要通过标签'+ids.value.join(',')+'生成链接吗？', '提示', {
     type: 'warning'
   }).then(() => {
-    spiderByTag(ids.value.join(',')).then(response => {
-      ElMessage.success("操作成功");
+    const loading = ElLoading.service({
+      lock: true,
+      text: 'Loading',
+      background: 'rgba(0, 0, 0, 0.7)',
+    })
+    setTimeout(() => {
+      loading.close()
+    }, 60000)
+    spiderByTag(ids.value.join(',')).then(data => {
+      loading.close()
+      ElMessage.success(data);
     });
   }).catch(() => {
   });

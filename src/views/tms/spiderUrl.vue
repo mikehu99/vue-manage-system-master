@@ -261,9 +261,9 @@ const spiderEssayByUrl  = () => {
     setTimeout(() => {
       loading.close()
     }, 60000)
-    spiderByUrl(ids.value.join(',')).then(response => {
+    spiderByUrl(ids.value.join(',')).then(data => {
       loading.close()
-      ElMessage.success(response);
+      ElMessage.success(data);
       getData();
     });
   }).catch(() => {
