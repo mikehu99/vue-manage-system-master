@@ -72,13 +72,35 @@
     <!-- 编辑弹出框 -->
     <el-dialog title="编辑" v-model="editVisible" width="30%">
       <el-form label-width="70px">
-        <el-form-item label="连接源">
-          <el-select v-model="form.linkId" placeholder="选择新闻源">
-            <el-option v-for="(link) in linkList" :label="link.url" :value="link.id" />
+        <el-form-item label="新闻源">
+          <el-select v-model="form.sourceId" placeholder="选择新闻源">
+            <el-option v-for="(source) in sourceList" :label="source.nameEn" :value="source.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="标签源">
-          <el-input v-model="form.tag"></el-input>
+        <el-form-item label="映射源">
+          <el-select v-model="form.mappingId" placeholder="选择映射源">
+            <el-option v-for="(mapping) in mappingList" :label="mapping.id" :value="mapping.id"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-select v-model="form.typeId" placeholder="类型">
+            <el-option v-for="(type) in sourceTypeList" :label="type.typeName" :value="type.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="链接">
+          <el-input v-model="form.url"></el-input>
+        </el-form-item>
+        <el-form-item label="标题(英)">
+          <el-input v-model="form.title"></el-input>
+        </el-form-item>
+        <el-form-item label="标题(中)">
+          <el-input v-model="form.titleZh"></el-input>
+        </el-form-item>
+        <el-form-item label="是否生成">
+          <el-radio-group v-model="form.spiderFlag">
+            <el-radio :label="1">是</el-radio>
+            <el-radio :label="0">否</el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="是否删除">
           <el-radio-group v-model="form.delFlag">
@@ -98,35 +120,55 @@
 </template>
 
 <script setup lang="ts" name="spiderUrl">
-import {ref, reactive, toRefs} from 'vue';
+import {ref, reactive, toRefs, watch} from 'vue';
 import {ElMessage, ElMessageBox,ElLoading} from 'element-plus';
 import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
 import {saveUpdate, getList, spiderByTag} from '@/api/tms/spiderUrl';
 import { getList as getSourceList } from '@/api/tms/source';
 import { getList as getSpiderTagList } from '@/api/tms/spiderTag';
 import {getList as getSourceTypeList} from '@/api/tms/sourceType';
+import { getList as getMappingList } from '@/api/tms/mapping';
+
 import { spiderByUrl } from '@/api/tms/essay';
 
 
 interface TableItem {
 }
 const data = reactive({
-  form: {},
+  form: {
+    id: undefined,
+    sourceId:undefined,
+    tagId: undefined,
+    url: '',
+    tag: '',
+    title: '',
+    titleZh: '',
+    spiderFlag: 0,
+    delFlag: 0
+  },
   query:{
     pageNo: 1,
     pageSize: 10
-  }
+  },
+  mappingQuery:{
+    pageNo: 1,
+    pageSize: 100,
+    sourceId:undefined,
+  },
 });
 
-const { form,query } = toRefs(data);
+const { form,query,mappingQuery } = toRefs(data);
 const tableData = ref<TableItem[]>([]);
 const pageTotal = ref(0);
 const sourceList = ref([]);
 const spiderTagList = ref([]);
 const sourceTypeList = ref([]);
+const mappingList = ref([]);
 const ids = ref([]);
 const single = ref(true);
 const multiple = ref(true);
+watch(() => form.value.sourceId, value => refreshMappingList(value))
+
 // 获取表格数据
 const getData = () => {
   getList(query.value).then(data => {
@@ -184,6 +226,14 @@ const getTypeName = (id) => {
   let arr = sourceTypeList.value.filter((i) => {return id == i.id;})
   return arr[0].typeName
 };
+//获取映射数据
+const refreshMappingList = (value) => {
+  mappingQuery.value.sourceId = value;
+  getMappingList(mappingQuery.value).then(data => {
+    console.log(data)
+    mappingList.value = data.records;
+  });
+};
 // 查询操作
 const handleSearch = () => {
   query.value.pageNo = 1;
@@ -216,8 +266,8 @@ const editVisible = ref(false);
 function reset() {
   form.value = {
     id: undefined,
-    linkId: undefined,
-    tagId: undefined,
+    sourceId:undefined,
+    tagId: -1,
     url: '',
     tag: '',
     title: '',
