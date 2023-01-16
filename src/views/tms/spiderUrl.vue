@@ -2,11 +2,16 @@
   <div>
     <div class="container">
       <div class="handle-box">
-        <el-select v-model="query.address" placeholder="地址" class="handle-select mr10">
-          <el-option key="1" label="广东省" value="广东省"></el-option>
-          <el-option key="2" label="湖南省" value="湖南省"></el-option>
+        <el-select v-model="query.sourceId" placeholder="新闻源" clearable="" class="handle-select mr10">
+          <el-option v-for="(source) in sourceList" :label="source.nameEn" :value="source.id" />
         </el-select>
-        <el-input v-model="query.name" placeholder="用户名" class="handle-input mr10"></el-input>
+        <el-select v-model="query.typeId" placeholder="选择类型" clearable="" class="handle-select mr10">
+          <el-option v-for="(type) in sourceTypeList" :label="type.typeName" :value="type.id" />
+        </el-select>
+        <el-select v-model="query.spiderFlag" placeholder="以生成" class="handle-select mr10">
+          <el-option key="1" label="是" value="1"></el-option>
+          <el-option key="2" label="否" value="0"></el-option>
+        </el-select>
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button type="primary" :icon="Plus" @click="handleCreate">新增</el-button>
         <el-button type="primary" icon="Delete" :disabled="multiple" @click="spiderEssayByUrl">爬取译文</el-button>
@@ -148,7 +153,10 @@ const data = reactive({
   },
   query:{
     pageNo: 1,
-    pageSize: 10
+    pageSize: 10,
+    sourceId:undefined,
+    typeId:undefined,
+    spiderFlag:undefined
   },
   mappingQuery:{
     pageNo: 1,

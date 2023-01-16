@@ -2,11 +2,9 @@
   <div>
     <div class="container">
       <div class="handle-box">
-        <el-select v-model="query.address" placeholder="地址" class="handle-select mr10">
-          <el-option key="1" label="广东省" value="广东省"></el-option>
-          <el-option key="2" label="湖南省" value="湖南省"></el-option>
+        <el-select v-model="query.sourceId" placeholder="新闻源" clearable="" class="handle-select mr10">
+          <el-option v-for="(source) in sourceList" :label="source.nameEn" :value="source.id" />
         </el-select>
-        <el-input v-model="query.name" placeholder="用户名" class="handle-input mr10"></el-input>
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button type="primary" :icon="Plus" @click="handleCreate">新增</el-button>
       </div>
@@ -133,7 +131,8 @@ const data = reactive({
   form: {},
   query:{
     pageNo: 1,
-    pageSize: 10
+    pageSize: 10,
+    sourceId:undefined
   }
 });
 
