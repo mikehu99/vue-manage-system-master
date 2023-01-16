@@ -2,15 +2,18 @@
   <div>
     <div class="container">
       <div class="handle-box">
-        <el-select v-model="query.address" placeholder="地址" class="handle-select mr10">
-          <el-option key="1" label="广东省" value="广东省"></el-option>
-          <el-option key="2" label="湖南省" value="湖南省"></el-option>
+        <el-select v-model="query.sourceId" placeholder="新闻源" clearable="" class="handle-select mr10">
+          <el-option v-for="(source) in sourceList" :label="source.nameEn" :value="source.id" />
         </el-select>
-        <el-input v-model="query.name" placeholder="用户名" class="handle-input mr10"></el-input>
+        <el-select v-model="query.typeId" placeholder="选择类型" clearable="" class="handle-select mr10">
+          <el-option v-for="(type) in sourceTypeList" :label="type.typeName" :value="type.id" />
+        </el-select>
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button type="primary" :icon="Plus" @click="handleCreate">新增</el-button>
+        <el-button type="danger" :icon="Delete" :disabled="multiple" @click="deleteByIds">删除</el-button>
       </div>
-      <el-table :data="tableData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+      <el-table :data="tableData" @selection-change="handleSelectionChange" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+        <el-table-column type="selection" width="55" align="center" />
         <el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
         <el-table-column label="新闻源">
           <template #default="scope">
@@ -42,9 +45,6 @@
           <template #default="scope">
             <el-button text :icon="Edit" @click="handleEdit(scope.row)" v-permiss="15">
               编辑
-            </el-button>
-            <el-button text :icon="Delete" class="red" @click="handleDelete(scope.row)" v-permiss="16">
-              删除
             </el-button>
           </template>
         </el-table-column>
@@ -101,7 +101,7 @@
 import {ref, reactive, toRefs} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
-import {saveUpdate, getList} from '@/api/tms/spiderLink';
+import {saveUpdate,getList,deleteByIds} from '@/api/tms/spiderLink';
 import { getList as getSourceList } from '@/api/tms/source';
 import {getList as getSourceTypeList} from '@/api/tms/sourceType';
 
@@ -111,7 +111,9 @@ const data = reactive({
   form: {},
   query:{
     pageNo: 1,
-    pageSize: 10
+    pageSize: 10,
+    sourceId:undefined,
+    typeId:undefined
   }
 });
 
@@ -173,13 +175,21 @@ const handlePageChange = (val: number) => {
 };
 
 // 删除操作
-const handleDelete = (row: any) => {
+/** 多选框选中数据 */
+const ids = ref([]);
+const single = ref(true);
+const multiple = ref(true);
+function handleSelectionChange(selection) {
+  ids.value = selection.map(item => item.id);
+  single.value = selection.length != 1;
+  multiple.value = !selection.length;
+}
+const handleDelete = () => {
   // 二次确认删除
-  ElMessageBox.confirm('确定要删除吗？', '提示', {
+  ElMessageBox.confirm('确定要删除'+ids.value.length+'条记录吗？', '提示', {
     type: 'warning'
   }).then(() => {
-    row.delFlag = 1;
-    saveUpdate(row).then(response => {
+    deleteByIds(ids.value.join(',')).then(response => {
       ElMessage.success("操作成功");
       getData();
     });

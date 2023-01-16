@@ -14,3 +14,10 @@ export const getList = (params:{}) => {
         params:params
     });
 };
+
+export const deleteByIds = (ids:string) => {
+    return request({
+        url: '/spiderLink/delete/'+ids,
+        method: 'get',
+    });
+};
