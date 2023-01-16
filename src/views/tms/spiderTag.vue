@@ -2,14 +2,16 @@
   <div>
     <div class="container">
       <div class="handle-box">
-        <el-select v-model="query.address" placeholder="地址" class="handle-select mr10">
-          <el-option key="1" label="广东省" value="广东省"></el-option>
-          <el-option key="2" label="湖南省" value="湖南省"></el-option>
+        <el-select v-model="query.sourceId" placeholder="新闻源" clearable="" class="handle-select mr10">
+          <el-option v-for="(source) in sourceList" :label="source.nameEn" :value="source.id" />
         </el-select>
-        <el-input v-model="query.name" placeholder="用户名" class="handle-input mr10"></el-input>
+        <el-select v-model="query.typeId" placeholder="选择类型" clearable="" class="handle-select mr10">
+          <el-option v-for="(type) in sourceTypeList" :label="type.typeName" :value="type.id" />
+        </el-select>
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button type="primary" :icon="Plus" @click="handleCreate">新增</el-button>
         <el-button type="primary" icon="Delete" :disabled="multiple" @click="spiderUrlByTags">爬取链接</el-button>
+        <el-button type="danger" :icon="Delete" :disabled="multiple" @click="handleDelete">删除</el-button>
       </div>
 
       <!--列表-->
@@ -34,9 +36,6 @@
           <template #default="scope">
             <el-button text :icon="Edit" @click="handleEdit(scope.row)" v-permiss="15">
               编辑
-            </el-button>
-            <el-button text :icon="Delete" class="red" @click="handleDelete(scope.row)" v-permiss="16">
-              删除
             </el-button>
           </template>
         </el-table-column>
@@ -100,7 +99,7 @@
 import {ref, reactive, toRefs, watch} from 'vue';
 import {ElLoading, ElMessage, ElMessageBox} from 'element-plus';
 import {Delete, Edit, Search, Plus} from '@element-plus/icons-vue';
-import {saveUpdate, getList} from '@/api/tms/spiderTag';
+import {saveUpdate, getList, deleteByIds} from '@/api/tms/spiderTag';
 import { getList as getLinkList } from '@/api/tms/spiderLink';
 import { getList as getMappingList } from '@/api/tms/mapping';
 import { spiderByTag } from '@/api/tms/spiderUrl';
@@ -122,7 +121,9 @@ const data = reactive({
   },
   query:{
     pageNo: 1,
-    pageSize: 10
+    pageSize: 10,
+    sourceId:undefined,
+    typeId:undefined
   },
   mappingQuery:{
     pageNo: 1,
@@ -218,13 +219,12 @@ const handlePageChange = (val: number) => {
 };
 
 // 删除操作
-const handleDelete = (row: any) => {
+const handleDelete = () => {
   // 二次确认删除
-  ElMessageBox.confirm('确定要删除吗？', '提示', {
+  ElMessageBox.confirm('确定要删除'+ids.value.length+'条记录吗？', '提示', {
     type: 'warning'
   }).then(() => {
-    row.delFlag = 1;
-    saveUpdate(row).then(response => {
+    deleteByIds(ids.value.join(',')).then(response => {
       ElMessage.success("操作成功");
       getData();
     });

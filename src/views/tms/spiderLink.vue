@@ -10,7 +10,7 @@
         </el-select>
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button type="primary" :icon="Plus" @click="handleCreate">新增</el-button>
-        <el-button type="danger" :icon="Delete" :disabled="multiple" @click="deleteByIds">删除</el-button>
+        <el-button type="danger" :icon="Delete" :disabled="multiple" @click="handleDelete">删除</el-button>
       </div>
       <el-table :data="tableData" @selection-change="handleSelectionChange" border class="table" ref="multipleTable" header-cell-class-name="table-header">
         <el-table-column type="selection" width="55" align="center" />
